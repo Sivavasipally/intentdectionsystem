@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IntentResult",
+  "type": "object",
+  "required": ["intent", "confidence", "entities", "ood", "traceId"],
+  "properties": {
+    "intent": {
+      "type": "string",
+      "description": "Detected intent",
+      "enum": [
+        "open_channel",
+        "close_channel",
+        "modify_channel",
+        "faq_policy",
+        "account_inquiry",
+        "transaction",
+        "complaint",
+        "card_services",
+        "ood"
+      ]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Confidence score"
+    },
+    "entities": {
+      "$ref": "#/definitions/EntitySchema"
+    },
+    "ood": {
+      "type": "boolean",
+      "description": "Out-of-domain flag"
+    },
+    "traceId": {
+      "type": "string",
+      "description": "Trace ID for request correlation"
+    }
+  },
+  "definitions": {
+    "EntitySchema": {
+      "type": "object",
+      "properties": {
+        "channel": {
+          "type": ["string", "null"],
+          "enum": ["whatsapp", "telegram", "email", "web", "ivr", "mobile_app", null]
+        },
+        "application": {
+          "type": ["string", "null"],
+          "enum": ["mobile_banking", "internet_banking", "branch_banking", null]
+        },
+        "department": {
+          "type": ["string", "null"],
+          "enum": ["retail_banking", "corporate_banking", "wealth_management", "cards", "loans", null]
+        },
+        "operation": {
+          "type": ["string", "null"],
+          "enum": ["card_block", "balance_inquiry", "fund_transfer", "dispute", "statement_request", null]
+        },
+        "operations": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "string"
+          }
+        },
+        "amount": {
+          "type": ["number", "null"]
+        },
+        "account_type": {
+          "type": ["string", "null"],
+          "enum": ["savings", "current", "credit_card", "loan", null]
+        },
+        "language": {
+          "type": ["string", "null"]
+        },
+        "locale": {
+          "type": ["string", "null"]
+        }
+      }
+    }
+  }
+}

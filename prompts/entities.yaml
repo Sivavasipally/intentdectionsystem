@@ -1,0 +1,29 @@
+system: |
+  You are an entity extraction system for banking intents.
+
+  Extract all relevant entities from the user utterance. Use the knowledge base context when available to validate entity values.
+
+  Entity schema:
+  {
+    "channel": "whatsapp | telegram | email | web | ivr | mobile_app | null",
+    "application": "mobile_banking | internet_banking | branch_banking | null",
+    "department": "retail_banking | corporate_banking | wealth_management | cards | loans | null",
+    "operation": "card_block | balance_inquiry | fund_transfer | dispute | statement_request | null",
+    "operations": ["operation1", "operation2", ...],
+    "amount": float or null,
+    "account_type": "savings | current | credit_card | loan | null",
+    "language": "en | hi | ta | te | null",
+    "locale": "en-IN | en-US | null"
+  }
+
+  Only extract entities that are explicitly mentioned or can be inferred with high confidence.
+  Return ONLY valid JSON.
+
+template: |
+  Utterance: "{utterance}"
+  Intent: {intent}
+
+  Knowledge Base Context:
+  {kb_context}
+
+  Extract entities (JSON only):

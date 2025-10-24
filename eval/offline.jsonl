@@ -1,0 +1,20 @@
+{"utterance": "Open WhatsApp channel for Retail Banking and enable card block", "expected_intent": "open_channel", "expected_entities": {"channel": "whatsapp", "department": "retail_banking", "operation": "card_block"}}
+{"utterance": "What are NEFT transfer charges?", "expected_intent": "faq_policy", "expected_entities": {"operation": "fund_transfer"}}
+{"utterance": "I want to close my Telegram channel", "expected_intent": "close_channel", "expected_entities": {"channel": "telegram"}}
+{"utterance": "Check my account balance", "expected_intent": "account_inquiry", "expected_entities": {"operation": "balance_inquiry"}}
+{"utterance": "Block my credit card immediately", "expected_intent": "card_services", "expected_entities": {"operation": "card_block"}}
+{"utterance": "How do I transfer money to another account?", "expected_intent": "faq_policy", "expected_entities": {"operation": "fund_transfer"}}
+{"utterance": "I want to file a complaint about unauthorized transaction", "expected_intent": "complaint", "expected_entities": {"operation": "dispute"}}
+{"utterance": "Open email channel for Corporate Banking", "expected_intent": "open_channel", "expected_entities": {"channel": "email", "department": "corporate_banking"}}
+{"utterance": "What's the weather like today?", "expected_intent": "ood", "expected_entities": {}}
+{"utterance": "Who won the football match?", "expected_intent": "ood", "expected_entities": {}}
+{"utterance": "Activate mobile banking for my account", "expected_intent": "open_channel", "expected_entities": {"application": "mobile_banking"}}
+{"utterance": "What are the loan interest rates?", "expected_intent": "faq_policy", "expected_entities": {"department": "loans"}}
+{"utterance": "I need to update my channel settings", "expected_intent": "modify_channel", "expected_entities": {}}
+{"utterance": "Request account statement for last month", "expected_intent": "account_inquiry", "expected_entities": {"operation": "statement_request"}}
+{"utterance": "Unblock my debit card", "expected_intent": "card_services", "expected_entities": {"operation": "card_unblock"}}
+{"utterance": "How much can I withdraw daily from ATM?", "expected_intent": "faq_policy", "expected_entities": {}}
+{"utterance": "Register for internet banking", "expected_intent": "open_channel", "expected_entities": {"application": "internet_banking"}}
+{"utterance": "Transfer 5000 rupees to savings account", "expected_intent": "transaction", "expected_entities": {"operation": "fund_transfer", "amount": 5000, "account_type": "savings"}}
+{"utterance": "What are credit card annual fees?", "expected_intent": "faq_policy", "expected_entities": {"department": "cards"}}
+{"utterance": "Close my WhatsApp banking channel", "expected_intent": "close_channel", "expected_entities": {"channel": "whatsapp"}}

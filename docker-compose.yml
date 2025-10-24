@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  intent-system:
+    build: .
+    container_name: intent-detection-system
+    ports:
+      - "8000:8000"
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - DB_URL=sqlite:///./data/app.db
+      - VECTOR_DIR=./data/indexes
+      - TENANT=${TENANT:-bank-asia}
+      - LANGUAGE=${LANGUAGE:-en-IN}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - ENV=${ENV:-development}
+    volumes:
+      - ./data:/app/data
+      - ./prompts:/app/prompts
+      - ./policies:/app/policies
+    restart: unless-stopped
+
+  # Optional: PostgreSQL instead of SQLite
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: intent-db
+  #   environment:
+  #     - POSTGRES_USER=intent_user
+  #     - POSTGRES_PASSWORD=intent_pass
+  #     - POSTGRES_DB=intent_db
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+
+  # Optional: Redis for caching
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: intent-cache
+  #   ports:
+  #     - "6379:6379"
+  #   restart: unless-stopped
+
+# volumes:
+#   postgres_data:

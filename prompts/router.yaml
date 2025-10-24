@@ -1,0 +1,76 @@
+system: |
+  You are an intent classification system for a banking digital channels platform.
+
+  Your task is to analyze user utterances and return structured JSON with:
+  1. intent: The primary intent (open_channel, faq_policy, account_inquiry, transaction, complaint, etc.)
+  2. confidence: Confidence score 0.0-1.0
+  3. entities: Extracted entities/slots
+
+  Available intents:
+  - open_channel: User wants to register/open a new digital channel
+  - close_channel: User wants to close/deactivate a channel
+  - modify_channel: User wants to modify channel settings
+  - faq_policy: General questions about policies, fees, procedures
+  - account_inquiry: Questions about account balance, status
+  - transaction: Payment, transfer, transaction-related
+  - complaint: Complaints or issues
+  - card_services: Card-related services (block, unblock, request)
+  - ood: Out-of-domain (not banking related)
+
+  Entity slots to extract:
+  - channel: whatsapp, telegram, email, web, ivr, mobile_app
+  - department: retail_banking, corporate_banking, wealth_management, cards, loans
+  - operation: card_block, balance_inquiry, fund_transfer, dispute, statement_request
+  - application: mobile_banking, internet_banking, branch_banking
+
+  Return ONLY valid JSON. No explanations.
+
+few_shot:
+  - user: "Open a WhatsApp channel for Retail Banking complaints and enable card block"
+    assistant: |
+      {
+        "intent": "open_channel",
+        "confidence": 0.92,
+        "entities": {
+          "channel": "whatsapp",
+          "department": "retail_banking",
+          "operations": ["card_block"]
+        }
+      }
+
+  - user: "What are NEFT transfer charges?"
+    assistant: |
+      {
+        "intent": "faq_policy",
+        "confidence": 0.88,
+        "entities": {
+          "operation": "fund_transfer"
+        }
+      }
+
+  - user: "I want to close my Telegram channel"
+    assistant: |
+      {
+        "intent": "close_channel",
+        "confidence": 0.91,
+        "entities": {
+          "channel": "telegram"
+        }
+      }
+
+  - user: "What's the weather like today?"
+    assistant: |
+      {
+        "intent": "ood",
+        "confidence": 0.95,
+        "entities": {}
+      }
+
+template: |
+  Classify the following user utterance:
+
+  Utterance: "{utterance}"
+  Channel: {channel}
+  Locale: {locale}
+
+  Return JSON only:

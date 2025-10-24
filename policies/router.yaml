@@ -1,0 +1,50 @@
+min_confidence: 0.7
+
+intent_routes:
+  open_channel:
+    tool: ChannelWriter
+    require_kb_validation: true
+    description: "Opens a new digital channel"
+
+  close_channel:
+    tool: ChannelWriter
+    require_kb_validation: false
+    description: "Closes an existing channel"
+
+  modify_channel:
+    tool: ChannelWriter
+    require_kb_validation: true
+    description: "Modifies channel settings"
+
+  faq_policy:
+    tool: RAGAnswer
+    require_kb_validation: false
+    description: "Answers FAQs using knowledge base"
+
+  account_inquiry:
+    tool: RAGAnswer
+    require_kb_validation: false
+    description: "Answers account-related queries"
+
+  transaction:
+    tool: ExternalAPI
+    require_kb_validation: false
+    description: "Handles transaction requests"
+
+  complaint:
+    tool: TicketingSystem
+    require_kb_validation: false
+    description: "Creates support tickets"
+
+  card_services:
+    tool: CardManagement
+    require_kb_validation: true
+    description: "Handles card operations"
+
+fallback:
+  tool: HumanHandover
+  description: "Escalates to human agent"
+
+rate_limits:
+  per_tenant_per_hour: 1000
+  per_user_per_minute: 10
