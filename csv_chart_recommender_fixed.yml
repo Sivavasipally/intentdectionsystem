@@ -98,26 +98,72 @@ workflow:
         
       - data:
           code: |
-            import pandas as pd
-            import io
+            import csv
             import json
+            from io import StringIO
             
-            # Read CSV
-            df = pd.read_csv(io.StringIO(csv_content))
+            # Parse CSV using standard library
+            reader = csv.DictReader(StringIO(csv_content))
+            rows = list(reader)
+            
+            if not rows:
+                return {
+                    "profile_json": json.dumps({"error": "Empty CSV"}),
+                    "data_json": "[]"
+                }
+            
+            # Get column names
+            columns = list(rows[0].keys()) if rows else []
+            
+            # Analyze column types
+            numeric_cols = []
+            text_cols = []
+            
+            for col in columns:
+                # Check if column is numeric by trying to convert first non-empty value
+                is_numeric = False
+                for row in rows:
+                    if row[col] and row[col].strip():
+                        try:
+                            float(row[col])
+                            is_numeric = True
+                        except ValueError:
+                            is_numeric = False
+                        break
+                
+                if is_numeric:
+                    numeric_cols.append(col)
+                else:
+                    text_cols.append(col)
             
             # Create profile
             profile = {
-                "rows": df.shape[0],
-                "columns": df.shape[1],
-                "column_names": list(df.columns),
-                "numeric_cols": df.select_dtypes(include=['number']).columns.tolist(),
-                "text_cols": df.select_dtypes(include=['object']).columns.tolist(),
-                "sample": df.head(3).to_dict()
+                "rows": len(rows),
+                "columns": len(columns),
+                "column_names": columns,
+                "numeric_columns": numeric_cols,
+                "text_columns": text_cols,
+                "sample_data": rows[:3] if len(rows) >= 3 else rows
             }
             
+            # Calculate basic stats for numeric columns
+            for col in numeric_cols:
+                values = []
+                for row in rows:
+                    try:
+                        val = float(row[col])
+                        values.append(val)
+                    except:
+                        pass
+                
+                if values:
+                    profile[f"{col}_min"] = min(values)
+                    profile[f"{col}_max"] = max(values)
+                    profile[f"{col}_avg"] = sum(values) / len(values)
+            
             return {
-                "profile_json": json.dumps(profile),
-                "data_json": df.to_json(orient='records')
+                "profile_json": json.dumps(profile, indent=2),
+                "data_json": json.dumps(rows)
             }
           code_language: python3
           desc: ''
@@ -147,7 +193,7 @@ workflow:
         targetPosition: left
         type: custom
         width: 244
-        
+
       - data:
           context:
             enabled: false
@@ -163,23 +209,31 @@ workflow:
             - id: prompt-1
               role: system
               text: |
-                You are a data visualization expert. Analyze the CSV profile and recommend 3 chart types.
+                You are a data visualization expert. Analyze the CSV profile and recommend 3-5 charts.
                 
-                Return ONLY valid JSON:
+                Based on the data types available, suggest appropriate visualizations.
+                
+                Return ONLY valid JSON in this exact format:
                 {
                   "charts": [
                     {
-                      "type": "bar|line|scatter|pie",
-                      "x": "column_name",
-                      "y": "column_name",
-                      "title": "Chart Title"
+                      "type": "bar|line|scatter|pie|histogram",
+                      "title": "Descriptive Chart Title",
+                      "x_column": "column_name",
+                      "y_column": "column_name_or_null",
+                      "description": "What this chart shows"
                     }
-                  ]
+                  ],
+                  "summary": "Brief analysis summary"
                 }
             - id: prompt-2
               role: user
               text: |
-                Profile: {{#1001.profile_json#}}
+                Analyze this dataset and recommend the best visualizations:
+                
+                {{#1001.profile_json#}}
+                
+                Consider the numeric and text columns to suggest meaningful charts.
           selected: false
           title: Chart Recommender
           type: llm
@@ -199,95 +253,129 @@ workflow:
         targetPosition: left
         type: custom
         width: 244
-        
+
       - data:
           code: |
-            import pandas as pd
-            import plotly.express as px
             import json
+            import base64
             
-            df = pd.read_json(data_json)
-            recommendations = json.loads(chart_json)
+            # Parse inputs
+            try:
+                data = json.loads(data_json)
+                recommendations = json.loads(chart_json)
+            except:
+                return {
+                    "dashboard_html": "<html><body><h1>Error parsing data</h1></body></html>"
+                }
             
-            html = """<html><head><script src='https://cdn.plot.ly/plotly-latest.min.js'></script></head><body>"""
+            # Generate HTML with Chart.js (works without external libraries)
+            html = """<!DOCTYPE html>
+            <html>
+            <head>
+                <title>Data Dashboard</title>
+                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        margin: 0;
+                        padding: 20px;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    }
+                    .container {
+                        max-width: 1200px;
+                        margin: 0 auto;
+                        background: white;
+                        border-radius: 10px;
+                        padding: 30px;
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                    }
+                    h1 {
+                        color: #333;
+                        text-align: center;
+                        margin-bottom: 20px;
+                    }
+                    .summary {
+                        background: #f7f9fc;
+                        padding: 15px;
+                        border-radius: 8px;
+                        margin-bottom: 30px;
+                        border-left: 4px solid #667eea;
+                    }
+                    .chart-container {
+                        margin-bottom: 40px;
+                        padding: 20px;
+                        background: #fff;
+                        border: 1px solid #e0e0e0;
+                        border-radius: 8px;
+                    }
+                    .chart-title {
+                        font-size: 1.2em;
+                        color: #444;
+                        margin-bottom: 10px;
+                        font-weight: 600;
+                    }
+                    .chart-desc {
+                        color: #666;
+                        font-size: 0.9em;
+                        margin-bottom: 15px;
+                    }
+                    canvas {
+                        max-height: 400px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>📊 Data Visualization Dashboard</h1>
+                    <div class="summary">
+                        <h3>Analysis Summary</h3>
+                        <p>""" + recommendations.get('summary', 'Data analysis complete.') + """</p>
+                        <p><strong>Dataset:</strong> """ + f"{len(data)} rows" + """</p>
+                    </div>
+            """
             
+            # Generate charts using Chart.js
             for i, chart in enumerate(recommendations.get('charts', [])):
-                div_id = f"chart{i}"
-                html += f"<div id='{div_id}'></div>"
+                chart_id = f"chart_{i}"
+                chart_type = chart.get('type', 'bar')
+                title = chart.get('title', f'Chart {i+1}')
+                description = chart.get('description', '')
+                x_col = chart.get('x_column')
+                y_col = chart.get('y_column')
                 
-                try:
-                    if chart['type'] == 'bar':
-                        fig = px.bar(df, x=chart['x'], y=chart['y'], title=chart['title'])
-                    elif chart['type'] == 'line':
-                        fig = px.line(df, x=chart['x'], y=chart['y'], title=chart['title'])
-                    elif chart['type'] == 'scatter':
-                        fig = px.scatter(df, x=chart['x'], y=chart['y'], title=chart['title'])
-                    elif chart['type'] == 'pie':
-                        counts = df[chart['x']].value_counts()
-                        fig = px.pie(values=counts.values, names=counts.index, title=chart['title'])
-                    else:
-                        continue
-                    
-                    html += f"<script>Plotly.newPlot('{div_id}', {fig.to_json()})</script>"
-                except:
-                    pass
+                html += f"""
+                    <div class="chart-container">
+                        <div class="chart-title">{title}</div>
+                        <div class="chart-desc">{description}</div>
+                        <canvas id="{chart_id}"></canvas>
+                    </div>
+                """
+                
+                # Prepare data for Chart.js
+                if chart_type in ['bar', 'line', 'scatter']:
+                    if x_col and y_col:
+                        labels = []
+                        values = []
+                        for row in data[:30]:  # Limit to first 30 rows for display
+                            if x_col in row and y_col in row:
+                                labels.append(str(row[x_col]))
+                                try:
+                                    values.append(float(row[y_col]))
+                                except:
+                                    values.append(0)
+                        
+                        chart_config = {
+                            'type': 'line' if chart_type == 'line' else 'bar',
+                            'data': {
+                                'labels': labels,
+                                'datasets': [{
+                                    'label': y_col,
+                                    'data': values,
+                                    'backgroundColor': 'rgba(102, 126, 234, 0.5)',
+                                    'borderColor': 'rgba(102, 126, 234, 1)',
             
-            html += "</body></html>"
             
-            return {
-                "dashboard_html": html
-            }
-          code_language: python3
-          desc: ''
-          outputs:
-            dashboard_html:
-              type: string
-          selected: false
-          title: Dashboard Builder
-          type: code
-          variables:
-            - value_selector:
-                - '1001'
-                - data_json
-              variable: data_json
-            - value_selector:
-                - '1002'
-                - text
-              variable: chart_json
-        height: 54
-        id: '1003'
-        position:
-          x: 980
-          y: 282
-        positionAbsolute:
-          x: 980
-          y: 282
-        selected: false
-        sourcePosition: right
-        targetPosition: left
-        type: custom
-        width: 244
-        
-      - data:
-          desc: ''
-          outputs:
-            - value_selector:
-                - '1003'
-                - dashboard_html
-              variable: dashboard
-          selected: false
-          title: End
-          type: end
-        height: 106
-        id: '1004'
-        position:
-          x: 1280
-          y: 282
-        positionAbsolute:
-          x: 1280
-          y: 282
-        selected: false
-        sourcePosition: right
-        targetPosition: left
-        type: custom
-        width: 244
+            
+            
+            
+            
