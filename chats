@@ -1,0 +1,500 @@
+Here’s a **powerful, production-ready prompt** you can use in **any LLM (GPT, Gemini, Claude, etc.)** to automatically analyze a CSV dataset and recommend the **best possible chart types** for visualization — based on data structure, column types, and analytical goals.
+
+---
+
+## 🧠 **Prompt: “CSV → Chart Recommendation Expert”**
+
+> **System / Role Prompt:**
+> You are a world-class **Data Visualization Expert** and **AI Chart Advisor**.
+> Your goal is to analyze CSV data and recommend the most suitable charts to represent it effectively — based on variable types, relationships, and visualization intent.
+> Use principles from *data storytelling*, *visual cognition*, and *the chart selection logic shown in “How to Choose Charts for Your Data” infographic* (Comparison, Relationship, Distribution, Composition, Over Time).
+
+---
+
+> **User Prompt:**
+> I’ll upload a CSV dataset.
+> Analyze the structure and suggest the **best possible chart types** for each combination of columns.
+> Then output:
+>
+> 1. **Chart Recommendation Table**
+>
+>    | Intent | Variables Used | Suggested Chart | Why It’s Suitable | Example Insight |
+>    | ------ | -------------- | --------------- | ----------------- | --------------- |
+> 2. **Chart Priority Ranking** – List top 5 most valuable charts for this dataset based on potential insights.
+> 3. **If possible**, provide the corresponding Python (Matplotlib / Plotly) or JS (Chart.js / D3.js) code snippets for the top 3 recommendations.
+>
+> **Analyze using these rules:**
+>
+> * **If comparing categories:**
+>
+>   * Few categories → Bar / Column chart
+>   * Many categories → Embedded / Grouped bar chart
+> * **If analyzing over time:**
+>
+>   * Continuous timeline → Line / Area / Stacked chart
+>   * Few time periods → Column / Stacked column
+> * **If showing distribution:**
+>
+>   * Single numeric variable → Histogram / Line histogram
+>   * Two variables → Scatterplot
+> * **If showing relationships:**
+>
+>   * Two variables → Scatterplot
+>   * 3+ variables → Bubble chart or Radar chart
+> * **If showing composition:**
+>
+>   * Add to total → Tree map / Waterfall
+>   * Single share of total → Pie / Donut chart
+> * Always consider: data type (categorical, numerical, datetime), data range, and granularity.
+>
+> **Finally:** Summarize the chart strategy as a short dashboard recommendation (e.g., “Best Dashboard for this data: Bar + Line + Scatter + Pie”).
+
+---
+
+### 🧩 Example Use:
+
+**Input:**
+CSV columns →
+`Date, Product, Sales, Profit, Region`
+
+**Output Example:**
+
+| Intent                | Variables Used                    | Suggested Chart    | Why It’s Suitable                      | Example Insight                      |
+| --------------------- | --------------------------------- | ------------------ | -------------------------------------- | ------------------------------------ |
+| Comparison            | Product vs Sales                  | Bar Chart          | Few categories, easy to compare totals | Product A leads sales                |
+| Trend                 | Date vs Sales                     | Line Chart         | Over time, continuous data             | Sales rising in Q3                   |
+| Relationship          | Sales vs Profit                   | Scatterplot        | Two numeric variables                  | Profit grows non-linearly with sales |
+| Composition           | Region vs Sales                   | Pie Chart          | Shares of total                        | North region 40% total               |
+| Composition Over Time | Date vs Sales (stacked by Region) | Stacked Area Chart | Multiple series over time              | Regional share trends                |
+
+**Dashboard Summary:**
+📊 *Recommended Dashboard:* Line Chart (Trends), Bar Chart (Category Comparison), Pie Chart (Composition), Scatterplot (Relationship).
+
+
+
+sample CSV :
+Date,Region,Product,Category,Sales,Profit,Units_Sold,Customer_Satisfaction
+2025-01-01,North,Product A,Electronics,12000,2500,150,4.2
+2025-01-01,South,Product B,Furniture,8000,1800,90,4.0
+2025-01-01,East,Product C,Electronics,9500,2300,120,4.5
+2025-01-01,West,Product D,Office Supplies,7000,1500,100,3.9
+2025-02-01,North,Product A,Electronics,13500,2600,160,4.4
+2025-02-01,South,Product B,Furniture,8200,1750,92,3.8
+2025-02-01,East,Product C,Electronics,9700,2400,125,4.6
+2025-02-01,West,Product D,Office Supplies,7200,1600,98,4.1
+2025-03-01,North,Product A,Electronics,14200,2800,165,4.5
+2025-03-01,South,Product B,Furniture,8500,1850,95,4.0
+2025-03-01,East,Product C,Electronics,10100,2450,130,4.7
+2025-03-01,West,Product D,Office Supplies,7400,1700,104,4.2
+2025-04-01,North,Product A,Electronics,15000,3000,170,4.6
+2025-04-01,South,Product B,Furniture,8800,1900,96,3.9
+2025-04-01,East,Product C,Electronics,10500,2500,133,4.8
+2025-04-01,West,Product D,Office Supplies,7600,1750,106,4.3
+
+
+Perfect 👍 Here’s a **sample CSV dataset** you can use to test the “Chart Recommendation Expert” prompt.
+
+It’s designed to include **multiple variable types** — categorical, numerical, and temporal — so that the AI can suggest *all* kinds of charts (comparison, relationship, distribution, and composition).
+
+---
+
+### 📄 **Sample CSV: `sales_data.csv`**
+
+```csv
+Date,Region,Product,Category,Sales,Profit,Units_Sold,Customer_Satisfaction
+2025-01-01,North,Product A,Electronics,12000,2500,150,4.2
+2025-01-01,South,Product B,Furniture,8000,1800,90,4.0
+2025-01-01,East,Product C,Electronics,9500,2300,120,4.5
+2025-01-01,West,Product D,Office Supplies,7000,1500,100,3.9
+2025-02-01,North,Product A,Electronics,13500,2600,160,4.4
+2025-02-01,South,Product B,Furniture,8200,1750,92,3.8
+2025-02-01,East,Product C,Electronics,9700,2400,125,4.6
+2025-02-01,West,Product D,Office Supplies,7200,1600,98,4.1
+2025-03-01,North,Product A,Electronics,14200,2800,165,4.5
+2025-03-01,South,Product B,Furniture,8500,1850,95,4.0
+2025-03-01,East,Product C,Electronics,10100,2450,130,4.7
+2025-03-01,West,Product D,Office Supplies,7400,1700,104,4.2
+2025-04-01,North,Product A,Electronics,15000,3000,170,4.6
+2025-04-01,South,Product B,Furniture,8800,1900,96,3.9
+2025-04-01,East,Product C,Electronics,10500,2500,133,4.8
+2025-04-01,West,Product D,Office Supplies,7600,1750,106,4.3
+```
+
+---
+
+### 💡 **What this CSV lets you test**
+
+| Visualization Intent            | Example Columns                     | Possible Chart           |
+| ------------------------------- | ----------------------------------- | ------------------------ |
+| **Trend (Over Time)**           | `Date` vs `Sales`                   | Line Chart / Area Chart  |
+| **Category Comparison**         | `Region` vs `Sales`                 | Bar Chart                |
+| **Composition**                 | `Category` vs `Sales`               | Pie Chart / Tree Map     |
+| **Relationship**                | `Sales` vs `Profit`                 | Scatter Plot             |
+| **Distribution**                | `Profit`                            | Histogram                |
+| **Multi-variable Relationship** | `Sales`, `Profit`, `Units_Sold`     | Bubble Chart             |
+| **Sentiment**                   | `Customer_Satisfaction` by `Region` | Box Plot or Column Chart |
+
+---
+
+Would you like me to add a **Python (Plotly or Matplotlib) code** that auto-detects chart types from this CSV and displays them interactively?
+
+
+
+
+
+---------------------------------------------
+Here’s a **Dify Chatflow DSL** (YAML) that takes a CSV file as input, uses **Claude (Anthropic LLM)** to analyze it, and outputs **chart recommendations** (chart type + rationale + sample visualization intent).
+
+It follows Dify’s standard schema for chatflows, enabling data ingestion, schema analysis, and structured LLM output.
+
+---
+
+### 📜 **Dify Chatflow DSL: `csv_chart_recommender.yml`**
+
+```yaml
+version: 1
+name: CSV Chart Recommender
+description: Takes a CSV file, analyzes its structure, and uses Claude to suggest the most appropriate chart types.
+flow:
+  - id: input_node
+    type: input
+    name: Upload CSV
+    description: User uploads a CSV dataset for visualization analysis.
+    fields:
+      - id: csv_file
+        name: CSV File
+        type: file
+        file_types: ["csv"]
+        required: true
+
+  - id: csv_reader
+    type: code
+    name: CSV Schema Extractor
+    description: Reads the CSV and extracts metadata (columns, data types, and sample values)
+    code: |
+      import pandas as pd
+      import json
+
+      df = pd.read_csv(inputs["csv_file"])
+      schema = {
+          "columns": list(df.columns),
+          "data_types": {col: str(df[col].dtype) for col in df.columns},
+          "sample_rows": df.head(5).to_dict(orient="records")
+      }
+      json.dumps(schema)
+    outputs:
+      - id: csv_schema
+        name: CSV Schema JSON
+
+  - id: llm_analysis
+    type: llm
+    name: Claude Chart Advisor
+    description: Uses Anthropic Claude to recommend chart types based on the CSV schema.
+    provider: anthropic
+    model: claude-3-5-sonnet
+    input_prompt: |
+      You are a **Data Visualization Expert**.
+      Analyze the provided CSV schema and suggest the best chart types for data storytelling.
+
+      ### Rules:
+      - Identify numeric, categorical, and datetime columns.
+      - Recommend chart types for each analytical intent:
+        1. **Comparison** (e.g., Bar, Column)
+        2. **Trend / Over Time** (e.g., Line, Area)
+        3. **Distribution** (e.g., Histogram, Boxplot)
+        4. **Relationship** (e.g., Scatter, Bubble)
+        5. **Composition** (e.g., Pie, TreeMap, Waterfall)
+      - Use reasoning to match columns to chart types.
+      - Output structured JSON with:
+        {
+          "intents": [
+            {
+              "intent": "Comparison",
+              "columns": ["Region", "Sales"],
+              "chart": "Bar Chart",
+              "why": "Shows category-wise comparison effectively",
+              "insight_example": "Compare total sales per region"
+            },
+            ...
+          ],
+          "recommended_dashboard": ["Line Chart", "Bar Chart", "Pie Chart", "Scatter Plot"]
+        }
+
+      ### CSV Schema:
+      {{ csv_schema }}
+
+  - id: output_node
+    type: output
+    name: Chart Recommendations
+    description: Outputs structured chart recommendations
+    inputs:
+      - from_node: llm_analysis
+        field: result
+```
+
+---
+
+### 🧠 **What this Chatflow Does**
+
+1. **Input Node:**
+   User uploads a `.csv` file.
+   (Example: your `sales_data.csv`)
+
+2. **CSV Reader Node:**
+   Python code reads the CSV, extracts:
+
+   * Column names
+   * Data types (numeric, categorical, datetime)
+   * First 5 sample rows
+
+3. **Claude Node:**
+
+   * Uses **Claude 3.5 Sonnet** for reasoning
+   * Applies the logic from “How to Choose Charts for Your Data”
+   * Outputs a **JSON of chart recommendations** (with rationale + example insights)
+   * Optionally includes a list of suggested dashboard visuals
+
+4. **Output Node:**
+   Displays the structured response for downstream UI (e.g., React dashboard, Streamlit chart generator, or Plotly renderer).
+
+---
+
+### 🧩 Example Output
+
+```json
+{
+  "intents": [
+    {
+      "intent": "Comparison",
+      "columns": ["Region", "Sales"],
+      "chart": "Bar Chart",
+      "why": "Best for comparing total sales per category",
+      "insight_example": "Identify top-performing regions"
+    },
+    {
+      "intent": "Trend / Over Time",
+      "columns": ["Date", "Sales"],
+      "chart": "Line Chart",
+      "why": "Shows how sales change over time",
+      "insight_example": "Spot seasonal peaks"
+    },
+    {
+      "intent": "Distribution",
+      "columns": ["Profit"],
+      "chart": "Histogram",
+      "why": "Displays profit frequency distribution",
+      "insight_example": "Detect skewed profit patterns"
+    }
+  ],
+  "recommended_dashboard": [
+    "Line Chart",
+    "Bar Chart",
+    "Pie Chart",
+    "Scatter Plot"
+  ]
+}
+```
+
+---
+
+Perfect — here’s the **final, production-ready Dify Chatflow DSL** that now includes a **download option** so users can export the generated dashboard as an `.html` file.
+
+---
+
+### 📜 **`csv_chart_recommender_with_visuals_and_download.yml`**
+
+```yaml
+version: 1
+name: CSV Chart Recommender + Visual Dashboard + Download
+description: Upload a CSV → analyze schema → Claude recommends charts → auto-generate Plotly visuals → export dashboard as HTML.
+
+flow:
+  - id: input_node
+    type: input
+    name: Upload CSV
+    description: Upload a CSV for analysis.
+    fields:
+      - id: csv_file
+        name: CSV File
+        type: file
+        file_types: ["csv"]
+        required: true
+      - id: top_n
+        name: Number of charts to generate
+        type: number
+        default: 5
+      - id: date_format_hint
+        name: Date format (optional)
+        type: text
+        required: false
+
+  - id: csv_reader
+    type: code
+    name: CSV Profile Extractor
+    description: Reads CSV and builds metadata for LLM.
+    code: |
+      import pandas as pd, json, numpy as np
+      path = inputs["csv_file"]
+      date_hint = inputs.get("date_format_hint") or None
+
+      df = pd.read_csv(path)
+      for col in df.columns:
+          if df[col].dtype == "object":
+              try:
+                  df[col] = pd.to_datetime(df[col], format=date_hint, errors="raise")
+              except Exception:
+                  try:
+                      df[col] = pd.to_datetime(df[col], errors="coerce", infer_datetime_format=True)
+                  except Exception:
+                      pass
+
+      numeric = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
+      datetime = [c for c in df.columns if pd.api.types.is_datetime64_any_dtype(df[c])]
+      categorical = [c for c in df.columns if c not in numeric + datetime]
+
+      meta = {
+          "columns": list(df.columns),
+          "numeric_cols": numeric,
+          "datetime_cols": datetime,
+          "categorical_cols": categorical,
+          "sample": df.head(3).to_dict(orient="records")
+      }
+
+      outputs = {
+          "csv_profile_json": json.dumps(meta),
+          "df_parquet_bytes": df.to_parquet(index=False)
+      }
+      outputs
+    outputs:
+      - id: csv_profile_json
+        name: CSV Profile JSON
+      - id: df_parquet_bytes
+        name: DataFrame (Parquet)
+
+  - id: llm_node
+    type: llm
+    name: Claude Chart Advisor
+    provider: anthropic
+    model: claude-3-5-sonnet
+    description: Uses Claude to suggest chart types.
+    input_prompt: |
+      You are a **Data Visualization Expert**.
+      Based on this CSV profile, recommend chart types.
+
+      Use this JSON format strictly:
+      {
+        "intents": [
+          {
+            "intent": "Trend / Over Time | Comparison | Distribution | Relationship | Composition",
+            "chart": "Line | Bar | Pie | Scatter | Histogram | Treemap | etc.",
+            "x": "column_name",
+            "y": "column_name",
+            "category": "optional",
+            "why": "reason",
+            "title": "Chart Title"
+          }
+        ],
+        "recommended_dashboard": ["Chart Title 1", "Chart Title 2"]
+      }
+
+      CSV Profile:
+      {{ csv_profile_json }}
+    outputs:
+      - id: recommendations_json
+        name: Chart Recommendations JSON
+
+  - id: chart_generator
+    type: code
+    name: Plotly Chart Renderer
+    description: Generate interactive Plotly charts as HTML.
+    code: |
+      import pandas as pd, io, json, plotly.express as px, plotly.graph_objects as go
+
+      df = pd.read_parquet(io.BytesIO(inputs["df_parquet_bytes"]))
+      rec = json.loads(inputs["recommendations_json"])
+      top_n = int(inputs.get("top_n", 5))
+
+      html_blocks = []
+      for item in rec.get("intents", [])[:top_n]:
+          chart = item.get("chart", "").lower()
+          x, y, cat, title = item.get("x"), item.get("y"), item.get("category"), item.get("title")
+          fig = None
+          try:
+              if chart in ["bar"]:
+                  fig = px.bar(df, x=x, y=y, color=cat, title=title)
+              elif chart in ["line"]:
+                  fig = px.line(df, x=x, y=y, color=cat, title=title)
+              elif chart in ["pie"]:
+                  fig = px.pie(df, names=x, values=y, title=title)
+              elif chart in ["scatter"]:
+                  fig = px.scatter(df, x=x, y=y, color=cat, title=title)
+              elif chart in ["histogram"]:
+                  fig = px.histogram(df, x=x or y, title=title)
+              elif chart in ["treemap"]:
+                  fig = px.treemap(df, path=[cat or x], values=y, title=title)
+              elif chart in ["waterfall"]:
+                  fig = go.Figure(go.Waterfall(x=df[x], y=df[y]))
+                  fig.update_layout(title=title)
+              if fig:
+                  html_blocks.append(f"<h3>{title}</h3>" + fig.to_html(include_plotlyjs='cdn', full_html=False))
+          except Exception as e:
+              html_blocks.append(f"<div><b>{title}</b>: Chart error {e}</div>")
+
+      dashboard_html = f"""
+      <html>
+      <head><meta charset='utf-8'><title>Chart Dashboard</title></head>
+      <body style='font-family:Arial;'>
+      <h2>Auto-Generated Dashboard</h2>
+      {''.join(html_blocks)}
+      </body></html>
+      """
+
+      with open("/mnt/data/chart_dashboard.html", "w", encoding="utf-8") as f:
+          f.write(dashboard_html)
+
+      outputs = {
+          "dashboard_html": dashboard_html,
+          "dashboard_path": "/mnt/data/chart_dashboard.html"
+      }
+      outputs
+    inputs:
+      - from_node: csv_reader
+        field: df_parquet_bytes
+      - from_node: llm_node
+        field: recommendations_json
+      - from_node: input_node
+        field: top_n
+    outputs:
+      - id: dashboard_html
+        name: Dashboard HTML
+      - id: dashboard_path
+        name: Dashboard File Path
+
+  - id: output_node
+    type: output
+    name: Results and Download
+    description: Display recommendations and dashboard download link.
+    inputs:
+      - label: Chart Recommendations
+        from_node: llm_node
+        field: recommendations_json
+      - label: Dashboard Preview
+        from_node: chart_generator
+        field: dashboard_html
+      - label: Download HTML
+        from_node: chart_generator
+        field: dashboard_path
+```
+
+---
+
+### ⚙️ **How this version improves**
+
+✅ Reads and profiles CSV
+✅ Uses Claude (Anthropic) to infer best chart types
+✅ Builds live Plotly charts in HTML
+✅ Displays dashboard preview inside Dify UI
+✅ Exports **`chart_dashboard.html`** as a downloadable file (stored under `/mnt/data`)
+
+---
+
