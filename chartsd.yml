@@ -1,0 +1,180 @@
+version: 1
+name: CSV Chart Recommender + Visual Dashboard + Download
+description: Upload a CSV → analyze schema → Claude recommends charts → auto-generate Plotly visuals → export dashboard as HTML.
+
+flow:
+  - id: input_node
+    type: input
+    name: Upload CSV
+    description: Upload a CSV for analysis.
+    fields:
+      - id: csv_file
+        name: CSV File
+        type: file
+        file_types: ["csv"]
+        required: true
+      - id: top_n
+        name: Number of charts to generate
+        type: number
+        default: 5
+      - id: date_format_hint
+        name: Date format (optional)
+        type: text
+        required: false
+
+  - id: csv_reader
+    type: code
+    name: CSV Profile Extractor
+    description: Reads CSV and builds metadata for LLM.
+    code: |
+      import pandas as pd, json, numpy as np
+      path = inputs["csv_file"]
+      date_hint = inputs.get("date_format_hint") or None
+
+      df = pd.read_csv(path)
+      for col in df.columns:
+          if df[col].dtype == "object":
+              try:
+                  df[col] = pd.to_datetime(df[col], format=date_hint, errors="raise")
+              except Exception:
+                  try:
+                      df[col] = pd.to_datetime(df[col], errors="coerce", infer_datetime_format=True)
+                  except Exception:
+                      pass
+
+      numeric = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
+      datetime = [c for c in df.columns if pd.api.types.is_datetime64_any_dtype(df[c])]
+      categorical = [c for c in df.columns if c not in numeric + datetime]
+
+      meta = {
+          "columns": list(df.columns),
+          "numeric_cols": numeric,
+          "datetime_cols": datetime,
+          "categorical_cols": categorical,
+          "sample": df.head(3).to_dict(orient="records")
+      }
+
+      outputs = {
+          "csv_profile_json": json.dumps(meta),
+          "df_parquet_bytes": df.to_parquet(index=False)
+      }
+      outputs
+    outputs:
+      - id: csv_profile_json
+        name: CSV Profile JSON
+      - id: df_parquet_bytes
+        name: DataFrame (Parquet)
+
+  - id: llm_node
+    type: llm
+    name: Claude Chart Advisor
+    provider: anthropic
+    model: claude-3-5-sonnet
+    description: Uses Claude to suggest chart types.
+    input_prompt: |
+      You are a **Data Visualization Expert**.
+      Based on this CSV profile, recommend chart types.
+
+      Use this JSON format strictly:
+      {
+        "intents": [
+          {
+            "intent": "Trend / Over Time | Comparison | Distribution | Relationship | Composition",
+            "chart": "Line | Bar | Pie | Scatter | Histogram | Treemap | etc.",
+            "x": "column_name",
+            "y": "column_name",
+            "category": "optional",
+            "why": "reason",
+            "title": "Chart Title"
+          }
+        ],
+        "recommended_dashboard": ["Chart Title 1", "Chart Title 2"]
+      }
+
+      CSV Profile:
+      {{ csv_profile_json }}
+    outputs:
+      - id: recommendations_json
+        name: Chart Recommendations JSON
+
+  - id: chart_generator
+    type: code
+    name: Plotly Chart Renderer
+    description: Generate interactive Plotly charts as HTML.
+    code: |
+      import pandas as pd, io, json, plotly.express as px, plotly.graph_objects as go
+
+      df = pd.read_parquet(io.BytesIO(inputs["df_parquet_bytes"]))
+      rec = json.loads(inputs["recommendations_json"])
+      top_n = int(inputs.get("top_n", 5))
+
+      html_blocks = []
+      for item in rec.get("intents", [])[:top_n]:
+          chart = item.get("chart", "").lower()
+          x, y, cat, title = item.get("x"), item.get("y"), item.get("category"), item.get("title")
+          fig = None
+          try:
+              if chart in ["bar"]:
+                  fig = px.bar(df, x=x, y=y, color=cat, title=title)
+              elif chart in ["line"]:
+                  fig = px.line(df, x=x, y=y, color=cat, title=title)
+              elif chart in ["pie"]:
+                  fig = px.pie(df, names=x, values=y, title=title)
+              elif chart in ["scatter"]:
+                  fig = px.scatter(df, x=x, y=y, color=cat, title=title)
+              elif chart in ["histogram"]:
+                  fig = px.histogram(df, x=x or y, title=title)
+              elif chart in ["treemap"]:
+                  fig = px.treemap(df, path=[cat or x], values=y, title=title)
+              elif chart in ["waterfall"]:
+                  fig = go.Figure(go.Waterfall(x=df[x], y=df[y]))
+                  fig.update_layout(title=title)
+              if fig:
+                  html_blocks.append(f"<h3>{title}</h3>" + fig.to_html(include_plotlyjs='cdn', full_html=False))
+          except Exception as e:
+              html_blocks.append(f"<div><b>{title}</b>: Chart error {e}</div>")
+
+      dashboard_html = f"""
+      <html>
+      <head><meta charset='utf-8'><title>Chart Dashboard</title></head>
+      <body style='font-family:Arial;'>
+      <h2>Auto-Generated Dashboard</h2>
+      {''.join(html_blocks)}
+      </body></html>
+      """
+
+      with open("/mnt/data/chart_dashboard.html", "w", encoding="utf-8") as f:
+          f.write(dashboard_html)
+
+      outputs = {
+          "dashboard_html": dashboard_html,
+          "dashboard_path": "/mnt/data/chart_dashboard.html"
+      }
+      outputs
+    inputs:
+      - from_node: csv_reader
+        field: df_parquet_bytes
+      - from_node: llm_node
+        field: recommendations_json
+      - from_node: input_node
+        field: top_n
+    outputs:
+      - id: dashboard_html
+        name: Dashboard HTML
+      - id: dashboard_path
+        name: Dashboard File Path
+
+  - id: output_node
+    type: output
+    name: Results and Download
+    description: Display recommendations and dashboard download link.
+    inputs:
+      - label: Chart Recommendations
+        from_node: llm_node
+        field: recommendations_json
+      - label: Dashboard Preview
+        from_node: chart_generator
+        field: dashboard_html
+      - label: Download HTML
+        from_node: chart_generator
+        field: dashboard_path

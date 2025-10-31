@@ -1,0 +1,293 @@
+app:
+  description: 'Analyzes CSV files and generates interactive dashboard with AI-recommended charts'
+  icon: 📊
+  icon_background: '#E4F2FF'
+  mode: workflow
+  name: CSV Data Visualizer
+  
+workflow:
+  features:
+    file_upload:
+      enabled: true
+    opening_statement: ''
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      
+  graph:
+    edges:
+      - data:
+          isInIteration: false
+          sourceType: start
+          targetType: code
+        id: start-to-profiler
+        source: '1000'
+        sourceHandle: source
+        target: '1001'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          sourceType: code
+          targetType: llm
+        id: profiler-to-llm
+        source: '1001'
+        sourceHandle: source
+        target: '1002'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          sourceType: llm
+          targetType: code
+        id: llm-to-builder
+        source: '1002'
+        sourceHandle: source
+        target: '1003'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+      - data:
+          isInIteration: false
+          sourceType: code
+          targetType: end
+        id: builder-to-end
+        source: '1003'
+        sourceHandle: source
+        target: '1004'
+        targetHandle: target
+        type: custom
+        zIndex: 0
+        
+    nodes:
+      - data:
+          desc: ''
+          selected: false
+          title: Start
+          type: start
+          variables:
+            - label: CSV Content
+              max_length: 1000000
+              options: []
+              required: true
+              type: text-input
+              variable: csv_content
+        height: 116
+        id: '1000'
+        position:
+          x: 80
+          y: 282
+        positionAbsolute:
+          x: 80
+          y: 282
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+        
+      - data:
+          code: |
+            import pandas as pd
+            import io
+            import json
+            
+            # Read CSV
+            df = pd.read_csv(io.StringIO(csv_content))
+            
+            # Create profile
+            profile = {
+                "rows": df.shape[0],
+                "columns": df.shape[1],
+                "column_names": list(df.columns),
+                "numeric_cols": df.select_dtypes(include=['number']).columns.tolist(),
+                "text_cols": df.select_dtypes(include=['object']).columns.tolist(),
+                "sample": df.head(3).to_dict()
+            }
+            
+            return {
+                "profile_json": json.dumps(profile),
+                "data_json": df.to_json(orient='records')
+            }
+          code_language: python3
+          desc: ''
+          outputs:
+            profile_json:
+              type: string
+            data_json:
+              type: string
+          selected: false
+          title: CSV Profiler
+          type: code
+          variables:
+            - value_selector:
+                - '1000'
+                - csv_content
+              variable: csv_content
+        height: 54
+        id: '1001'
+        position:
+          x: 380
+          y: 282
+        positionAbsolute:
+          x: 380
+          y: 282
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+        
+      - data:
+          context:
+            enabled: false
+            variable_selector: []
+          desc: ''
+          model:
+            completion_params:
+              temperature: 0.7
+            mode: chat
+            name: gpt-3.5-turbo
+            provider: openai
+          prompt_template:
+            - id: prompt-1
+              role: system
+              text: |
+                You are a data visualization expert. Analyze the CSV profile and recommend 3 chart types.
+                
+                Return ONLY valid JSON:
+                {
+                  "charts": [
+                    {
+                      "type": "bar|line|scatter|pie",
+                      "x": "column_name",
+                      "y": "column_name",
+                      "title": "Chart Title"
+                    }
+                  ]
+                }
+            - id: prompt-2
+              role: user
+              text: |
+                Profile: {{#1001.profile_json#}}
+          selected: false
+          title: Chart Recommender
+          type: llm
+          variables: []
+          vision:
+            enabled: false
+        height: 98
+        id: '1002'
+        position:
+          x: 680
+          y: 282
+        positionAbsolute:
+          x: 680
+          y: 282
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+        
+      - data:
+          code: |
+            import pandas as pd
+            import plotly.express as px
+            import json
+            
+            df = pd.read_json(data_json)
+            recommendations = json.loads(chart_json)
+            
+            html = """<html><head><script src='https://cdn.plot.ly/plotly-latest.min.js'></script></head><body>"""
+            
+            for i, chart in enumerate(recommendations.get('charts', [])):
+                div_id = f"chart{i}"
+                html += f"<div id='{div_id}'></div>"
+                
+                try:
+                    if chart['type'] == 'bar':
+                        fig = px.bar(df, x=chart['x'], y=chart['y'], title=chart['title'])
+                    elif chart['type'] == 'line':
+                        fig = px.line(df, x=chart['x'], y=chart['y'], title=chart['title'])
+                    elif chart['type'] == 'scatter':
+                        fig = px.scatter(df, x=chart['x'], y=chart['y'], title=chart['title'])
+                    elif chart['type'] == 'pie':
+                        counts = df[chart['x']].value_counts()
+                        fig = px.pie(values=counts.values, names=counts.index, title=chart['title'])
+                    else:
+                        continue
+                    
+                    html += f"<script>Plotly.newPlot('{div_id}', {fig.to_json()})</script>"
+                except:
+                    pass
+            
+            html += "</body></html>"
+            
+            return {
+                "dashboard_html": html
+            }
+          code_language: python3
+          desc: ''
+          outputs:
+            dashboard_html:
+              type: string
+          selected: false
+          title: Dashboard Builder
+          type: code
+          variables:
+            - value_selector:
+                - '1001'
+                - data_json
+              variable: data_json
+            - value_selector:
+                - '1002'
+                - text
+              variable: chart_json
+        height: 54
+        id: '1003'
+        position:
+          x: 980
+          y: 282
+        positionAbsolute:
+          x: 980
+          y: 282
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
+        
+      - data:
+          desc: ''
+          outputs:
+            - value_selector:
+                - '1003'
+                - dashboard_html
+              variable: dashboard
+          selected: false
+          title: End
+          type: end
+        height: 106
+        id: '1004'
+        position:
+          x: 1280
+          y: 282
+        positionAbsolute:
+          x: 1280
+          y: 282
+        selected: false
+        sourcePosition: right
+        targetPosition: left
+        type: custom
+        width: 244
