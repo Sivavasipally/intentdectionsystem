@@ -166,7 +166,7 @@ for i, chart in enumerate(recommendations.get('charts', [])):
 
 html += """
     </div>
-</body>
+</body>a
 </html>
 """
 
